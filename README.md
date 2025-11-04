@@ -6,6 +6,15 @@ It uses [vast.ai](https://cloud.vast.ai/?ref_id=341917) to provision GPUs (note 
 
 ## Setup / Requirements
 
+### Venv setup
+
+In the repo root, run:
+
+```
+python -m venv .venv || python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 ### Get gmail mbox
 
@@ -26,16 +35,6 @@ to compress it.
 Set up an account on [huggingface](https://huggingface.co/) and get a write token from [here](https://huggingface.co/settings/tokens).
 
 File: `huggingface_token` - (in the root dir of this repo) should contain a write token. Git will ignore it, so it won't be leaked.
-
-### Venv setup
-
-In the repo root, run:
-
-```
-python -m venv .venv || python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
 
 ### Set up vastai
 

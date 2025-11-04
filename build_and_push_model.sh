@@ -81,46 +81,11 @@ llamafactory-cli train \
 
 llamafactory-cli export \
     --model_name_or_path "${FINE_TUNE_BASE_MODEL}" \
-    --adapter_name_or_path ${OUT_DIR} \
+    --adapter_name_or_path "${OUT_DIR}" \
     --template qwen \
-    --export_dir exported-qwen-sft \
+    --export_dir "${MERGED_DIR}" \
     --max_new_tokens 128 \
     --temperature 0.7
-
-python - << PY
-import torch, os
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
-
-# --- paths ---
-base = "${FINE_TUNE_BASE_MODEL}"              # base model from Hugging Face
-adapter = "${OUT_DIR}"   # your trained LoRA output dir
-out = "${MERGED_DIR}"    # merged full model target dir
-
-# --- load tokenizer ---
-tok = AutoTokenizer.from_pretrained(base, use_fast=True)
-
-# --- load base model on GPU ---
-device = "cuda" if torch.cuda.is_available() else "cpu"
-dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
-base_model = AutoModelForCausalLM.from_pretrained(
-    base,
-    torch_dtype=dtype,
-    device_map="auto"
-)
-
-# --- load LoRA adapter and merge ---
-peft_model = PeftModel.from_pretrained(base_model, adapter, device_map="auto")
-merged = peft_model.merge_and_unload()
-
-# --- save merged model ---
-os.makedirs(out, exist_ok=True)
-merged.save_pretrained(out, safe_serialization=True)
-tok.save_pretrained(out)
-
-print(f"✅ merged model saved to {out}")
-PY
 
 cd /workspace/llama.cpp
 cmake -B build
