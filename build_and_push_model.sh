@@ -142,8 +142,14 @@ python3 ${LLAMA_CPP_DIR}/convert_hf_to_gguf.py "${MERGED_DIR}" --outfile "${GGUF
 
 # Upload to hf
 hf auth login --token "$(cat ${HOME}/huggingface_token)"
-hf upload "${HF_REPO}" "${OUT_DIR}"
-hf upload "${HF_REPO_GGUF}" "${GGUF_DIR}" --repo-type model
+i=10
+OK=0
+while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO}" "${OUT_DIR}" && OK=1 && break; done
+if [[ $OK != "1" ]]; then echo FAILED && exit; fi
+i=10
+OK=0
+while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO_GGUF}" "${GGUF_DIR}"; done
+if [[ $OK != "1" ]]; then echo FAILED && exit; fi
 
 echo =====================
 echo Vast run completed OK
