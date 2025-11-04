@@ -1,6 +1,6 @@
 token.json
 *credentials.json
-gmail_sft_sharegpt.jsonl
+gmail_sft_*.jsonl
 *.bak
 Takeout
 *xz
