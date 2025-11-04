@@ -9,6 +9,7 @@ GPU_NAME="RTX 5090"               # 5090 is roughly 3 times the speed of trainin
 RESULT_LIMIT=5
 MAX_STEPS=2000
 FINE_TUNE_BASE_MODEL=Qwen/Qwen2.5-3B-Instruct
+MODEL_BASENAME=qwen2.5-3b-sft
 
 usage() {
   cat << EOF
@@ -21,6 +22,7 @@ Options:
   --disk-gb SIZE         Disk size in GB for the instance (default: ${DISK_GB})
   --gpu-name NAME        GPU name to request from Vast (default: ${GPU_NAME})
   --base-model NAME      Base model, (default: ${FINE_TUNE_BASE_MODEL})
+  --hf-repo NAME         Huggingface repo name, (default: ${MODEL_BASENAME})
   --max-steps SIZE       Number of max steps. Setting to low value (eg 1) runs
                          much more useful when testing, as it does a minimal
                          amount of training. (default: ${MAX_STEPS})
@@ -28,19 +30,13 @@ Options:
 EOF
 }
 
-# Default values (overridable through CLI flags)
-GMAIL_JSONL_FILENAME=gmail/gmail_sft_instruct.jsonl
-DISK_GB=64                        # container disk size
-GPU_NAME="RTX 5090"               # 5090 is roughly 3 times the speed of training of 3090
-RESULT_LIMIT=5
-MAX_STEPS=2000
-FINE_TUNE_BASE_MODEL=Qwen/Qwen2.5-3B-Instruct
-
 # Parse options
 while [[ "$1" != '' ]]; do
   case "$1" in
     --hf-user)
       HF_USERNAME="$2"; shift ;;
+    --hf-repo)
+      MODEL_BASENAME="$2"; shift ;;
     --max-steps)
       MAX_STEPS="$2"; shift ;;
     --gmail-jsonl)
@@ -77,6 +73,7 @@ echo "GMAIL_JSONL_FILENAME=$GMAIL_JSONL_FILENAME"
 echo "DISK_GB=$DISK_GB"
 echo "GPU_NAME=$GPU_NAME"
 echo "HF_USERNAME=$HF_USERNAME"
+echo "MODEL_BASENAME=$MODEL_BASENAME"
 
 # Build the Vast filter (RTX + your constraints)
 QUERY=$(
@@ -144,7 +141,7 @@ unset CMD_SCP_HUGGINGFACE_TOKEN
 unset CMD_SCP_RUN_SCRIPT
 unset CMD_SCP_GMAIL_JSONL
 
-CMD_SSH_RUN_SCRIPT=$(echo "$SSH_URL" | sed -E "s#ssh://([^@]+)@([^:]+):([0-9]+)#ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p \3 \1@\2 HF_USERNAME=${HF_USERNAME} FINE_TUNE_BASE_MODEL=${FINE_TUNE_BASE_MODEL} LLAMAFACTORY_TRAIN_MAX_STEPS=${MAX_STEPS} /workspace/build_and_push_model.sh#")
+CMD_SSH_RUN_SCRIPT=$(echo "$SSH_URL" | sed -E "s#ssh://([^@]+)@([^:]+):([0-9]+)#ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p \3 \1@\2 MODEL_BASENAME=${MODEL_BASENAME} HF_USERNAME=${HF_USERNAME} FINE_TUNE_BASE_MODEL=${FINE_TUNE_BASE_MODEL} LLAMAFACTORY_TRAIN_MAX_STEPS=${MAX_STEPS} /workspace/build_and_push_model.sh#")
 echo "Running: $CMD_SSH_RUN_SCRIPT"
 until eval "$CMD_SSH_RUN_SCRIPT"; do sleep 5; done
 unset CMD_SSH_RUN_SCRIPT

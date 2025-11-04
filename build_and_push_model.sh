@@ -5,7 +5,7 @@ export HOME=/workspace
 
 set -eu
 
-MODEL_BASENAME=qwen2.5-3b-fine-tune-sft
+MODEL_BASENAME="${MODEL_BASENAME:-qwen2.5-3b-fine-tune-sft}"
 FINE_TUNE_BASE_MODEL="${FINE_TUNE_BASE_MODEL:-Qwen/Qwen2.5-3B-Instruct}"
 LLAMAFACTORY_TRAIN_MAX_STEPS="${LLAMAFACTORY_TRAIN_MAX_STEPS:-2000}"
 
