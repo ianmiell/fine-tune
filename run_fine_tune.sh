@@ -62,8 +62,6 @@ while [[ "$1" != '' ]]; do
   shift
 done
 
-set -u
-
 # Check all is set up correctly
 [[ $HF_USERNAME != "" ]] || ( echo "Please set the hf-user flag"; usage; exit 1 )
 [[ $VIRTUAL_ENV != "" ]] || ( echo "Please set up venv (see README.md)"; exit 1 )
