@@ -18,7 +18,7 @@ Options:
   --hf-user NAME         Huggingface username (required)
   --gmail-jsonl PATH     Path to the JSONL dataset (without trailing .xz)
                         (default: ${GMAIL_JSONL_FILENAME}
-  --disk-gb SIZE         Disk size in GB for the instance (default: ${DISK_DB})
+  --disk-gb SIZE         Disk size in GB for the instance (default: ${DISK_GB})
   --gpu-name NAME        GPU name to request from Vast (default: ${GPU_NAME})
   --base-model NAME      Base model, (default: ${FINE_TUNE_BASE_MODEL})
   --max-steps SIZE       Number of max steps. Setting to low value (eg 1) runs
@@ -65,11 +65,13 @@ done
 set -u
 
 # Check all is set up correctly
-[ -n $HF_USERNAME ] || ( usage; exit 1 )
-command vastai || ( echo "Please install vast.ai cli tool: https://docs.vast.ai/cli/get-started"; exit 1 )
-[ -n $VIRTUAL_ENV ] || ( echo "Please set up venv (see README.md)"; exit 1 )
-[ pip check ] || ( echo "Please install pip dependencies as per requirements.txt (see README.md)"; exit 1 )
+[[ $HF_USERNAME != "" ]] || ( echo "Please set the hf-user flag"; usage; exit 1 )
+[[ $VIRTUAL_ENV != "" ]] || ( echo "Please set up venv (see README.md)"; exit 1 )
+command vastai >/dev/null 2>&1 || ( echo "Please install vast.ai cli tool: https://docs.vast.ai/cli/get-started"; exit 1 )
+pip check >/dev/null 2>&1 || ( echo "Please install pip dependencies as per requirements.txt (see README.md)"; exit 1 )
 [ -f gmail/gmail_sft_sharegpt.jsonl.xz ] || ( echo "Please create and/or compress gmail_sft_sharegpt.jsonl file (see README.md)"; exit 1 )
+
+set -u
 
 # Example debug output
 echo "MAX_STEPS=$MAX_STEPS"
@@ -96,7 +98,7 @@ unset QUERY
 
 # Sanity
 echo "Costs found"
-echo "$SEARCH_OUT" | jq '.[0].min_bid'
+echo "$SEARCH_OUT" | jq '.[0]'
 if [[ -z "$SEARCH_OUT" ]]; then
   echo "!! No results returned by Vast CLI." >&2
   exit 1
@@ -121,7 +123,7 @@ until vastai show instance "$IID" --raw | grep 'actual_status.*running'; do
     vastai destroy instance "$IID"
     exit 1
   fi
-  sleep 20
+  sleep 5
 done
 unset STATUS_MSG
 
