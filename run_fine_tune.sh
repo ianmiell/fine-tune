@@ -63,7 +63,8 @@ done
 [[ $VIRTUAL_ENV != "" ]] || ( echo "Please set up venv (see README.md)"; exit 1 )
 command vastai >/dev/null 2>&1 || ( echo "Please install vast.ai cli tool: https://docs.vast.ai/cli/get-started"; exit 1 )
 pip check >/dev/null 2>&1 || ( echo "Please install pip dependencies as per requirements.txt (see README.md)"; exit 1 )
-[ -f gmail/gmail_sft_sharegpt.jsonl.xz ] || ( echo "Please create and/or compress gmail_sft_sharegpt.jsonl file (see README.md)"; exit 1 )
+[ -f gmail/gmail_sft_instruct.jsonl.xz ] || ( echo "Please create and/or compress gmail_sft_sharegpt.jsonl file (see README.md)"; exit 1 )
+[ -f huggingface_token ] || ( echo "huggingface_token file should be in repo root (see README.md)"; exit 1 )
 
 set -u
 
@@ -93,7 +94,7 @@ unset QUERY
 
 # Sanity
 echo "Costs found"
-echo "$SEARCH_OUT" | jq '.[0]'
+echo "$SEARCH_OUT" | jq '.[0].search.totalHour'
 if [[ -z "$SEARCH_OUT" ]]; then
   echo "!! No results returned by Vast CLI." >&2
   exit 1

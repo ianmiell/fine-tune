@@ -148,7 +148,7 @@ while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO}" "${OUT_DIR}" && OK=1 &&
 if [[ $OK != "1" ]]; then echo FAILED && exit; fi
 i=10
 OK=0
-while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO_GGUF}" "${GGUF_DIR}"; done
+while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO_GGUF}" "${GGUF_DIR}" && OK=1 && break; done
 if [[ $OK != "1" ]]; then echo FAILED && exit; fi
 
 echo =====================

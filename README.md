@@ -6,9 +6,6 @@ It uses [vast.ai](https://cloud.vast.ai/?ref_id=341917) to provision GPUs (note 
 
 ## Setup / Requirements
 
-### Install vastai tool
-
-See [here](https://docs.vast.ai/cli/get-started?ref_id=341917) for help setting up.
 
 ### Get gmail mbox
 
@@ -40,6 +37,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Set up vastai
+
+See [here](https://docs.vast.ai/cli/get-started?ref_id=341917) for help setting up.
+
+Run:
+
+`vastai set api-key xxxxxxxxxxxxxxxxxxxxxxxxxx`
+
 ## Running
 
 `./run_fine_tune.sh --hf-user YOUR_HUGGINGFACE_USERNAME`
@@ -49,3 +54,4 @@ Run:
 `./run_fine_tune.sh -h`
 
 for options.
+
