@@ -13,7 +13,7 @@ Use Google Takeout to download your sent email to a `.mbox` file. You probably o
 
 Then run the gmail extraction script.
 
-`python ./gmail/extract_mbox_to_sft.py --my_email youremailadress@example.com -o ./gmail/gmail_sft_sharegpt.jsonl /path/to/mbox/file/Sent.mbox`
+`python ./gmail/extract_mbox_to_sft.py --my_email youremailadress@example.com -o ./gmail/gmail_sft_instruct.jsonl /path/to/mbox/file/Sent.mbox`
 
 and then run:
 
