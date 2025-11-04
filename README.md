@@ -1,6 +1,6 @@
 # fine-tune
 
-A script to follow along with the https://zwischenzugs.com blog to fine-tune a huggingface image against your own data (in the example here, sent gmails).
+A script to follow along with the [https://zwischenzugs.com](https://zwischenzugs.com/2025/11/04/fine-tuning-an-ai-part-i/) blog to fine-tune a huggingface image against your own data (in the example here, sent gmails).
 
 It uses [vast.ai](https://cloud.vast.ai/?ref_id=341917) to provision GPUs (note the link is a referral link I benefit from if you sign up).
 
