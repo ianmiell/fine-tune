@@ -1,4 +1,4 @@
-# ai-experimentation
+# fine-tune
 
 ## Setup
 

@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
+
+# Default values (overridable through CLI flags)
+GMAIL_JSONL_FILENAME=gmail/gmail_sft_instruct.jsonl
+DISK_GB=64                        # container disk size
+GPU_NAME="RTX 5090"               # 5090 is roughly 3 times the speed of training of 3090
+RESULT_LIMIT=5
+MAX_STEPS=2000
+FINE_TUNE_BASE_MODEL=Qwen/Qwen2.5-3B-Instruct
 
 usage() {
-  cat <<'EOF'
+  cat << EOF
 Usage: build_model.sh [options]
 
 Options:
+  --hf-user NAME         Huggingface username (required)
   --gmail-jsonl PATH     Path to the JSONL dataset (without trailing .xz)
-  --disk-gb SIZE         Disk size in GB for the instance (default: 64)
-  --gpu-name NAME        GPU name to request from Vast (default: RTX 5090)
-  --base-model NAME      Base model, eg Qwen/Qwen2.5-3B-Instruct
-  --hf-user NAME         Huggingface username
-  --max-steps SIZE       Number of max steps. Setting to low value (eg 1) is
-                         useful when testing, as it does a minimal amount of
-                         training. Default is 2000
+                        (default: ${GMAIL_JSONL_FILENAME}
+  --disk-gb SIZE         Disk size in GB for the instance (default: ${DISK_DB})
+  --gpu-name NAME        GPU name to request from Vast (default: ${GPU_NAME})
+  --base-model NAME      Base model, (default: ${FINE_TUNE_BASE_MODEL})
+  --max-steps SIZE       Number of max steps. Setting to low value (eg 1) runs
+                         much more useful when testing, as it does a minimal
+                         amount of training. (default: ${MAX_STEPS})
   --help                 Show this help message and exit
 EOF
 }
-
-
-# Define long options
-OPTIONS=$(getopt -o h --long help,base-model:,hf-user:,max-steps:,gmail-jsonl:,disk-gb:,gpu-name: -- "$@") || {
-  usage
-  exit 1
-}
-
-eval set -- "$OPTIONS"
 
 # Default values (overridable through CLI flags)
 GMAIL_JSONL_FILENAME=gmail/gmail_sft_instruct.jsonl
@@ -37,34 +37,38 @@ MAX_STEPS=2000
 FINE_TUNE_BASE_MODEL=Qwen/Qwen2.5-3B-Instruct
 
 # Parse options
-while true; do
+while [[ "$1" != '' ]]; do
   case "$1" in
-    --max-steps)
-      MAX_STEPS="$2"; shift 2 ;;
-    --gmail-jsonl)
-      GMAIL_JSONL_FILENAME="$2"; shift 2 ;;
-    --disk-gb)
-      DISK_GB="$2"; shift 2 ;;
-    --gpu-name)
-      GPU_NAME="$2"; shift 2 ;;
-    --base-model)
-      FINE_TUNE_BASE_MODEL="$2"; shift 2 ;;
     --hf-user)
-      HF_USERNAME="$2"; shift 2 ;;
+      HF_USERNAME="$2"; shift ;;
+    --max-steps)
+      MAX_STEPS="$2"; shift ;;
+    --gmail-jsonl)
+      GMAIL_JSONL_FILENAME="$2"; shift ;;
+    --disk-gb)
+      DISK_GB="$2"; shift ;;
+    --gpu-name)
+      GPU_NAME="$2"; shift ;;
+    --base-model)
+      FINE_TUNE_BASE_MODEL="$2"; shift ;;
     -h|--help)
       usage; exit 0 ;;
     --)
-      shift; break ;;
+      shift;;
     *)
-      echo "Error: Unknown option $1" >&2
+      echo "Error: Unknown option $1"
       usage; exit 1 ;;
   esac
+  shift
 done
 
+set -u
+
 # Check all is set up correctly
+[ -n $HF_USERNAME ] || ( usage; exit 1 )
 command vastai || ( echo "Please install vast.ai cli tool: https://docs.vast.ai/cli/get-started"; exit 1 )
 [ -n $VIRTUAL_ENV ] || ( echo "Please set up venv (see README.md)"; exit 1 )
-[ pip check ] || ( echo "Please install pip dependencies as per requirements.txt (see README.md); exit 1 )
+[ pip check ] || ( echo "Please install pip dependencies as per requirements.txt (see README.md)"; exit 1 )
 [ -f gmail/gmail_sft_sharegpt.jsonl.xz ] || ( echo "Please create and/or compress gmail_sft_sharegpt.jsonl file (see README.md)"; exit 1 )
 
 # Example debug output
