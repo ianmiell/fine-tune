@@ -1,6 +1,14 @@
 # fine-tune
 
-## Setup
+A script to follow along with the https://zwischenzugs.com blog to fine-tune a huggingface image against your own data (in the example here, sent gmails).
+
+It uses [vast.ai](https://cloud.vast.ai/?ref_id=341917) to provision GPUs (note the link is a referral link I benefit from if you sign up).
+
+## Setup / Requirements
+
+### Install vastai tool
+
+See [here](https://docs.vast.ai/cli/get-started?ref_id=341917) for help setting up.
 
 ### Get gmail mbox
 
@@ -16,11 +24,15 @@ and then run:
 
 to compress it.
 
-### Login tokens required
+### Huggingface account and login tokens required
 
-`huggingface_token` - in root dir, should contain a write token. Git will ignore it.
+Set up an account on [huggingface](https://huggingface.co/) and get a write token from [here](https://huggingface.co/settings/tokens).
+
+File: `huggingface_token` - (in the root dir of this repo) should contain a write token. Git will ignore it, so it won't be leaked.
 
 ### Venv setup
+
+In the repo root, run:
 
 ```
 python -m venv .venv || python3 -m venv .venv
@@ -30,7 +42,7 @@ pip install -r requirements.txt
 
 ## Running
 
-`./run_fine_tune.sh`
+`./run_fine_tune.sh --hf-user YOUR_HUGGINGFACE_USERNAME`
 
 Run:
 
