@@ -44,7 +44,7 @@ Run:
 
 `vastai set api-key xxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-## Running
+## Running the fine-tune
 
 `./run_fine_tune.sh --hf-user YOUR_HUGGINGFACE_USERNAME`
 
@@ -54,3 +54,17 @@ Run:
 
 for options.
 
+## Running the model
+
+```
+python interact.py -h
+usage: interact.py [-h] [--base BASE] [--adapter ADAPTER] [--compare-base]
+
+Interact with a fine-tuned Qwen model
+
+options:
+  -h, --help         show this help message and exit
+  --base BASE        Base model identifier to load
+  --adapter ADAPTER  Adapter/LoRA identifier to load
+  --compare-base     Also run the base model for side-by-side responses
+```
