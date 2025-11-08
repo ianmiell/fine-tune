@@ -32,7 +32,7 @@ GMAIL_JSONL_FILENAME="gmail_sft_instruct.jsonl"
 [ -f "${GMAIL_JSONL_FILENAME}" ] || xz -d "${GMAIL_JSONL_FILENAME}.xz"
 
 # apts
-apt install build-essential vim -y
+apt install build-essential -y
 
 # Clones
 git clone https://github.com/hiyouga/LLaMA-Factory.git "${LLAMA_FACTORY_DIR}"
@@ -52,7 +52,7 @@ pip uninstall -y torch torchvision torchaudio bitsandbytes || true
 pip install --pre --index-url https://download.pytorch.org/whl/nightly/cu128 torch torchaudio
 pip install bitsandbytes>=0.39.0
 
-hf auth login --token "$(cat ${HOME}/huggingface_token)"
+hf auth login --token "$(cat ${HOME}/token)"
 hf repo create "$HF_REPO" --repo-type model --private || true
 hf repo create "$HF_REPO_GGUF" --repo-type model --private || true
 
@@ -106,7 +106,7 @@ python3 ${LLAMA_CPP_DIR}/convert_hf_to_gguf.py "${MERGED_DIR}" --outfile "${GGUF
 #"${LLAMA_FACTORY_DIR}"/build/bin/llama-server--model "${MODEL_DIR}/${MODEL_BASENAME}".Q4_K_M.gguf --host 0.0.0.0 --port 8000 --n-gpu-layers 0 --threads 8
 
 # Upload to hf
-hf auth login --token "$(cat ${HOME}/huggingface_token)"
+hf auth login --token "$(cat ${HOME}/token)"
 i=10
 OK=0
 while [[ $i -gt 0 ]]; do ((i--)); hf upload "${HF_REPO}" "${OUT_DIR}" && OK=1 && break; done

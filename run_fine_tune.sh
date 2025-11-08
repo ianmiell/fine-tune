@@ -7,7 +7,7 @@ GMAIL_JSONL_FILENAME=gmail/gmail_sft_instruct.jsonl
 DISK_GB=64                        # container disk size
 GPU_NAME="RTX 5090"               # 5090 is roughly 3 times the speed of training of 3090
 RESULT_LIMIT=5
-MAX_STEPS=2000
+MAX_STEPS=500
 FINE_TUNE_BASE_MODEL=Qwen/Qwen2.5-3B-Instruct
 MODEL_BASENAME=qwen2.5-3b-sft
 
@@ -64,7 +64,9 @@ done
 command vastai >/dev/null 2>&1 || ( echo "Please install vast.ai cli tool: https://docs.vast.ai/cli/get-started"; exit 1 )
 pip check >/dev/null 2>&1 || ( echo "Please install pip dependencies as per requirements.txt (see README.md)"; exit 1 )
 [ -f gmail/gmail_sft_instruct.jsonl.xz ] || ( echo "Please create and/or compress gmail_sft_sharegpt.jsonl file (see README.md)"; exit 1 )
-[ -f huggingface_token ] || ( echo "huggingface_token file should be in repo root (see README.md)"; exit 1 )
+[ -f huggingface_token ] || [ -f ~/.cache/huggingface/token ] || ( echo "huggingface_token file should be in repo root (see README.md)"; exit 1 )
+[ -f huggingface_token ] && HF_TOKEN_FILE=huggingface_token || true
+[ -f ~/.cache/huggingface/token ] && HF_TOKEN_FILE=~/.cache/huggingface/token  || true
 
 set -u
 
@@ -75,6 +77,7 @@ echo "DISK_GB=$DISK_GB"
 echo "GPU_NAME=$GPU_NAME"
 echo "HF_USERNAME=$HF_USERNAME"
 echo "MODEL_BASENAME=$MODEL_BASENAME"
+echo "HF_TOKEN_FILE=$HF_TOKEN_FILE"
 
 # Build the Vast filter (RTX + your constraints)
 QUERY=$(
@@ -127,25 +130,30 @@ vastai attach ssh "$IID" "$(cat ~/.ssh/id_ed25519.pub)"
 SCP_URL="$(vastai scp-url "$IID")"
 SSH_URL="$(vastai ssh-url "$IID")"
 
-CMD_SCP_HUGGINGFACE_TOKEN=$(echo "$SCP_URL" | sed -E 's#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 huggingface_token \1@\2:/workspace#')
-CMD_SCP_RUN_SCRIPT=$(echo "$SCP_URL" | sed -E 's#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 build_and_push_model.sh \1@\2:/workspace#')
-# shellcheck disable=SC2016
-CMD_SCP_GMAIL_JSONL=$(echo "$SCP_URL" | sed -E 's#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 ${GMAIL_JSONL_FILENAME}.xz \1@\2:/workspace#')
-echo "Uploading: $CMD_SCP_HUGGINGFACE_TOKEN"
-until eval "$CMD_SCP_HUGGINGFACE_TOKEN"; do sleep 5; done
-echo "Uploading: $CMD_SCP_RUN_SCRIPT"
-until eval "$CMD_SCP_RUN_SCRIPT"; do sleep 5; done
+while true
+do
+  CMD_SCP_HUGGINGFACE_TOKEN=$(echo "$SCP_URL" | sed -E "s#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 ${HF_TOKEN_FILE} \1@\2:/workspace#")
+  CMD_SCP_RUN_SCRIPT=$(echo "$SCP_URL" | sed -E 's#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 build_and_push_model.sh \1@\2:/workspace#')
+  # shellcheck disable=SC2016
+  CMD_SCP_GMAIL_JSONL=$(echo "$SCP_URL" | sed -E 's#scp://([^@]+)@([^:]+):([0-9]+)#scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P \3 ${GMAIL_JSONL_FILENAME}.xz \1@\2:/workspace#')
+  echo "Uploading: $CMD_SCP_HUGGINGFACE_TOKEN"
+  until eval "$CMD_SCP_HUGGINGFACE_TOKEN"; do sleep 5; done
+  echo "Uploading: $CMD_SCP_RUN_SCRIPT"
+  until eval "$CMD_SCP_RUN_SCRIPT"; do sleep 5; done
 
-echo "Uploading: $CMD_SCP_GMAIL_JSONL"
-until eval "$CMD_SCP_GMAIL_JSONL"; do sleep 5; done
-unset CMD_SCP_HUGGINGFACE_TOKEN
-unset CMD_SCP_RUN_SCRIPT
-unset CMD_SCP_GMAIL_JSONL
+  echo "Uploading: $CMD_SCP_GMAIL_JSONL"
+  until eval "$CMD_SCP_GMAIL_JSONL"; do sleep 5; done
+  unset CMD_SCP_HUGGINGFACE_TOKEN
+  unset CMD_SCP_RUN_SCRIPT
+  unset CMD_SCP_GMAIL_JSONL
 
-CMD_SSH_RUN_SCRIPT=$(echo "$SSH_URL" | sed -E "s#ssh://([^@]+)@([^:]+):([0-9]+)#ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p \3 \1@\2 MODEL_BASENAME=${MODEL_BASENAME} HF_USERNAME=${HF_USERNAME} FINE_TUNE_BASE_MODEL=${FINE_TUNE_BASE_MODEL} LLAMAFACTORY_TRAIN_MAX_STEPS=${MAX_STEPS} /workspace/build_and_push_model.sh#")
-echo "Running: $CMD_SSH_RUN_SCRIPT"
-until eval "$CMD_SSH_RUN_SCRIPT"; do sleep 5; done
-unset CMD_SSH_RUN_SCRIPT
+  CMD_SSH_RUN_SCRIPT=$(echo "$SSH_URL" | sed -E "s#ssh://([^@]+)@([^:]+):([0-9]+)#ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p \3 \1@\2 MODEL_BASENAME=${MODEL_BASENAME} HF_USERNAME=${HF_USERNAME} FINE_TUNE_BASE_MODEL=${FINE_TUNE_BASE_MODEL} LLAMAFACTORY_TRAIN_MAX_STEPS=${MAX_STEPS} /workspace/build_and_push_model.sh#")
+  echo "Running: $CMD_SSH_RUN_SCRIPT"
+  until eval "$CMD_SSH_RUN_SCRIPT"; do sleep 5; done
+  unset CMD_SSH_RUN_SCRIPT
+  CMD_SSH_RUN_SCRIPT_CHECK=$(echo "$SSH_URL" | sed -E "s#ssh://([^@]+)@([^:]+):([0-9]+)#ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p \3 \1@\2 ls /workspace/${HF_TOKEN_FILE} /workspace/${GMAIL_JSONL_FILENAME}#")
+  if eval "$CMD_SSH_RUN_SCRIPT"; then break; fi
+done
 
 
 echo "$SSH_URL"
